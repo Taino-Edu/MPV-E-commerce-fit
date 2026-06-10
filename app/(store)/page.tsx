@@ -18,7 +18,8 @@ async function getFeaturedProducts() {
       orderBy: { createdAt: "desc" },
       take: 8,
     })
-  } catch {
+  } catch (error) {
+    console.error("[getFeaturedProducts]", error)
     return []
   }
 }
