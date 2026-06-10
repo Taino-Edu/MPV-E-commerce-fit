@@ -24,10 +24,10 @@ async function getFeaturedProducts() {
 }
 
 const categories = [
-  { name: "Halteres & Anilhas", slug: "halteres-anilhas", emoji: "🏋️", desc: "Do iniciante ao avançado" },
-  { name: "Estações de Treino", slug: "estacoes", emoji: "💪", desc: "Multifuncionais e compactas" },
-  { name: "Maquinários", slug: "maquinarios", emoji: "⚙️", desc: "Performance profissional" },
-  { name: "Acessórios", slug: "acessorios", emoji: "🎽", desc: "Tudo para seu treino" },
+  { name: "Esteiras", slug: "cardio", emoji: "🏃", desc: "Caminhada e corrida em casa" },
+  { name: "Bicicletas", slug: "cardio", emoji: "🚴", desc: "Ergométricas e spinning" },
+  { name: "Elípticos", slug: "cardio", emoji: "⚡", desc: "Cardio completo sem impacto" },
+  { name: "Musculação", slug: "musculacao", emoji: "🏋️", desc: "Racks, bancos e equipamentos" },
 ]
 
 const benefits = [
