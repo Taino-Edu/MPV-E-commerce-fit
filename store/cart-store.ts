@@ -1,7 +1,7 @@
 "use client"
 
 import { create } from "zustand"
-import { persist } from "zustand/middleware"
+import { persist, createJSONStorage } from "zustand/middleware"
 
 export type CartItem = {
   variantId: string
@@ -66,6 +66,15 @@ export const useCartStore = create<CartStore>()(
         return get().items.reduce((acc, i) => acc + i.price * i.quantity, 0)
       },
     }),
-    { name: "start-fitness-cart" }
+    {
+      name: "start-fitness-cart",
+      storage: createJSONStorage(() =>
+        typeof window !== "undefined" ? localStorage : {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+      ),
+    }
   )
 )

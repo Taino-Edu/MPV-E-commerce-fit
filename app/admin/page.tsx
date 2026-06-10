@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Dashboard — Admin" }
+export const dynamic = "force-dynamic"
 
 async function getStats() {
   const [totalOrders, paidOrders, lowStock, revenue] = await Promise.all([

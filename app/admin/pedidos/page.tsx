@@ -3,6 +3,8 @@ import { formatPrice, formatDate, formatOrderStatus } from "@/lib/format"
 import { Badge } from "@/components/ui/badge"
 import type { Metadata } from "next"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = { title: "Pedidos — Admin" }
 
 type SearchParams = Promise<{ status?: string; pagina?: string }>

@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 import type { Metadata } from "next"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = { title: "Produtos — Admin" }
 
 export default async function AdminProductsPage() {

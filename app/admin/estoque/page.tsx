@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Estoque — Admin" }
+export const dynamic = "force-dynamic"
 
 export default async function AdminStockPage() {
   const inventory = await db.inventory.findMany({

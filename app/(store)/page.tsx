@@ -4,17 +4,23 @@ import { ProductCard } from "@/components/store/product-card"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Zap, Truck, ShieldCheck, RotateCcw } from "lucide-react"
 
+export const dynamic = "force-dynamic"
+
 async function getFeaturedProducts() {
-  return db.productVariant.findMany({
+  try {
+    return await db.productVariant.findMany({
     where: { isActive: true, product: { isActive: true } },
     include: {
       product: { include: { category: true } },
       images: { where: { isPrimary: true }, take: 1 },
       inventory: true,
     },
-    orderBy: { createdAt: "desc" },
-    take: 8,
-  })
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    })
+  } catch {
+    return []
+  }
 }
 
 const categories = [

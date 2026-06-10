@@ -3,6 +3,7 @@ import { ProductCard } from "@/components/store/product-card"
 import type { Metadata } from "next"
 
 export const metadata: Metadata = { title: "Produtos" }
+export const dynamic = "force-dynamic"
 
 type SearchParams = Promise<{ categoria?: string; busca?: string; pagina?: string }>
 
