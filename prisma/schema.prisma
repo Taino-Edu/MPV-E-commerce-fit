@@ -1,0 +1,279 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ── Auth (next-auth v5) ───────────────────────────────────────────
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?
+  phone         String?
+  role          Role      @default(CUSTOMER)
+  isGuest       Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  accounts  Account[]
+  sessions  Session[]
+  addresses Address[]
+  orders    Order[]
+  carts     Cart[]
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+model Account {
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([provider, providerAccountId])
+}
+
+model Session {
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String
+  expires    DateTime
+
+  @@id([identifier, token])
+}
+
+// ── Address ──────────────────────────────────────────────────────
+
+model Address {
+  id         String   @id @default(cuid())
+  userId     String
+  label      String?
+  cep        String
+  street     String
+  number     String
+  complement String?
+  district   String
+  city       String
+  state      String   @db.Char(2)
+  isDefault  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  orders Order[]
+}
+
+// ── Catalog ──────────────────────────────────────────────────────
+
+model Category {
+  id       String     @id @default(cuid())
+  slug     String     @unique
+  name     String
+  parentId String?
+
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id          String   @id @default(cuid())
+  categoryId  String
+  slug        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  category Category        @relation(fields: [categoryId], references: [id])
+  variants ProductVariant[]
+}
+
+model ProductVariant {
+  id             String  @id @default(cuid())
+  productId      String
+  sku            String  @unique
+  attributeValue String
+  price          Decimal @db.Decimal(10, 2)
+  weightKg       Decimal @db.Decimal(8, 3)
+  heightCm       Decimal @db.Decimal(8, 2)
+  widthCm        Decimal @db.Decimal(8, 2)
+  depthCm        Decimal @db.Decimal(8, 2)
+  isActive       Boolean @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  product    Product        @relation(fields: [productId], references: [id], onDelete: Cascade)
+  images     ProductImage[]
+  inventory  Inventory?
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  variantId String
+  url       String
+  altText   String?
+  sortOrder Int     @default(0)
+  isPrimary Boolean @default(false)
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+// ── Inventory ────────────────────────────────────────────────────
+
+model Inventory {
+  variantId      String @id
+  stockPhysical  Int    @default(0)
+  stockAvailable Int    @default(0)
+  minAlertQty    Int    @default(5)
+
+  variant ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+}
+
+// ── Cart ─────────────────────────────────────────────────────────
+
+model Cart {
+  id           String   @id @default(cuid())
+  userId       String?
+  sessionToken String?  @unique
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+
+  user  User?      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CartItem[]
+}
+
+model CartItem {
+  id        String @id @default(cuid())
+  cartId    String
+  variantId String
+  quantity  Int
+
+  cart    Cart           @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+
+  @@unique([cartId, variantId])
+}
+
+// ── Orders ───────────────────────────────────────────────────────
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String
+  addressId       String
+  status          OrderStatus @default(PENDING_PAYMENT)
+  freightProvider String?
+  freightService  String?
+  freightPrice    Decimal?    @db.Decimal(10, 2)
+  freightDeadline Int?
+  subtotal        Decimal     @db.Decimal(10, 2)
+  total           Decimal     @db.Decimal(10, 2)
+  notes           String?
+  expiresAt       DateTime?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  user     User        @relation(fields: [userId], references: [id])
+  address  Address     @relation(fields: [addressId], references: [id])
+  items    OrderItem[]
+  payment  Payment?
+  shipment Shipment?
+}
+
+enum OrderStatus {
+  PENDING_PAYMENT
+  PAID
+  PICKING
+  DISPATCHED
+  DELIVERED
+  CANCELLED
+  EXPIRED
+}
+
+model OrderItem {
+  id        String  @id @default(cuid())
+  orderId   String
+  variantId String
+  quantity  Int
+  unitPrice Decimal @db.Decimal(10, 2)
+  weightKg  Decimal @db.Decimal(8, 3)
+
+  order   Order          @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant ProductVariant @relation(fields: [variantId], references: [id])
+}
+
+// ── Payment ──────────────────────────────────────────────────────
+
+model Payment {
+  id              String        @id @default(cuid())
+  orderId         String        @unique
+  provider        String        @default("mercadopago")
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  externalId      String?
+  amount          Decimal       @db.Decimal(10, 2)
+  pixQrCode       String?
+  pixQrCodeB64    String?
+  pixExpiresAt    DateTime?
+  boletoUrl       String?
+  boletoExpiresAt DateTime?
+  paidAt          DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  order Order @relation(fields: [orderId], references: [id])
+}
+
+enum PaymentMethod {
+  PIX
+  CREDIT_CARD
+  BOLETO
+}
+
+enum PaymentStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REFUNDED
+  CANCELLED
+}
+
+// ── Shipment ─────────────────────────────────────────────────────
+
+model Shipment {
+  id           String    @id @default(cuid())
+  orderId      String    @unique
+  trackingCode String?
+  carrier      String?
+  dispatchedAt DateTime?
+  deliveredAt  DateTime?
+
+  order Order @relation(fields: [orderId], references: [id])
+}
